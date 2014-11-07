@@ -1,4 +1,5 @@
 import os
+import pygst
 import json
 import pprint
 from flask import Flask, jsonify, request, redirect, url_for
@@ -44,6 +45,10 @@ def index():
            "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: Deletes all entries in the database<br>" \
            "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: upload page</p>" \
            ""
+
+@app.route('/threadtest')
+def threadtest():
+    pass
 
 @app.route('/upbloat', methods=['GET', 'POST'])
 def upload():
