@@ -1,3 +1,0 @@
-[submodule "server/netplix"]
-	path = server/netplix
-	url = ssh://5411bcb75973ca47ae0002dc@netplix-spencerhawkins.rhcloud.com/~/git/netplix.git/

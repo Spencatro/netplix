@@ -1,4 +1,2 @@
-Directory for server code
-=========================
-
-NOTE: netplix is a git "submodule," meaning it is it's own git repository. This is because openshift requires its own repo to manage deployment, etc.
+requirements.txt -- required python modules, openshift will automatically download and install the latest of each
+wsgi/ -- folder that contains the actual app code
