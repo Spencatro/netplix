@@ -1,12 +1,14 @@
 import os
 import pygst
 import json
+import threading
 import pprint
 from flask import Flask, jsonify, request, redirect, url_for
 from flask import render_template
 from flask import request
 from werkzeug import secure_filename
 
+#TODO: Fix this!
 RUNNING_LOCALLY = False
 if not 'OPENSHIFT_DATA_DIR' in os.environ:
     RUNNING_LOCALLY = True
@@ -28,6 +30,12 @@ def allowed_file(filename):
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = DATA_DIR
+
+def load_db_file():
+    with open(DB_JSON_FILE) as fp:
+        jsonificated = jsonify(json.load(fp))
+    return jsonificated
+
 
 #Create our index or root / route
 @app.route("/")
@@ -61,8 +69,7 @@ def upload():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            with open(DB_JSON_FILE) as fp:
-                db_dict = json.load(fp)
+            db_dict = load_db_file()
             if not 'id_pointer' in db_dict:
                 db_dict['id_pointer'] = 10 # Just in case
             id_pointer = int(db_dict['id_pointer'])
@@ -101,14 +108,11 @@ def envinfo():
 
 @app.route("/dbdump")
 def dbdump():
-    with open(DB_JSON_FILE) as fp:
-        jsonificated = jsonify(json.load(fp))
-    return jsonificated
+    return load_db_file()
 
 @app.route("/search/by_title/<title>")
 def search_by_title(title):
-    with open(DB_JSON_FILE) as fp:
-        db_dict = json.load(fp)
+    db_dict = load_db_file()
     results_dict = {}
     catalog = db_dict['catalog']
     for key in catalog.keys():
@@ -118,8 +122,7 @@ def search_by_title(title):
 
 @app.route("/search/by_actor/<actor>")
 def search_by_actor(actor):
-    with open(DB_JSON_FILE) as fp:
-        db_dict = json.load(fp)
+    db_dict = load_db_file()
     results_dict = {}
     catalog = db_dict['catalog']
     for key in catalog.keys():
@@ -130,8 +133,7 @@ def search_by_actor(actor):
 
 @app.route("/search/<search_string>")
 def search(search_string):
-    with open(DB_JSON_FILE) as fp:
-        db_dict = json.load(fp)
+    db_dict = load_db_file()
     results_dict = {}
     catalog = db_dict['catalog']
     for key in catalog.keys():
@@ -143,6 +145,13 @@ def search(search_string):
                 results_dict[key] = catalog[key]
                 continue
     return jsonify(results_dict)
+
+@app.route("/play/<id>")
+def play(id):
+    db_dict = load_db_file()
+    title = db_dict[id]['title']
+    return "You tried to play "+str(title)+"<br />ERROR: Not yet implemented"
+
 
 
 if __name__ == "__main__":
