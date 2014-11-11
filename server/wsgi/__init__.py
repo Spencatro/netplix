@@ -149,7 +149,7 @@ def search(search_string):
 @app.route("/play/<id>")
 def play(id):
     db_dict = load_db_file()
-    title = db_dict[id]['title']
+    title = db_dict['catalog'][id]['title']
     return "You tried to play "+str(title)+"<br />ERROR: Not yet implemented"
 
 
