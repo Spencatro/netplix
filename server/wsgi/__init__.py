@@ -33,7 +33,7 @@ app.config['UPLOAD_FOLDER'] = DATA_DIR
 
 def load_db_file():
     with open(DB_JSON_FILE) as fp:
-        jsonificated = jsonify(json.load(fp))
+        jsonificated = json.load(fp)
     return jsonificated
 
 
@@ -108,7 +108,7 @@ def envinfo():
 
 @app.route("/dbdump")
 def dbdump():
-    return load_db_file()
+    return jsonify(load_db_file())
 
 @app.route("/search/by_title/<title>")
 def search_by_title(title):
