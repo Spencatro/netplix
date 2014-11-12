@@ -4,17 +4,16 @@ import json
 import threading
 import pprint
 from flask import Flask, jsonify, request, redirect, url_for
-from flask import render_template
+from flask import render_template, abort
 from flask import request
 from werkzeug import secure_filename
 
-#TODO: Fix this!
 RUNNING_LOCALLY = False
-if not 'OPENSHIFT_DATA_DIR' in os.environ:
+if not 'APACHE_LOCK_DIR' in os.environ:
     RUNNING_LOCALLY = True
-    DATA_DIR = "/var/www/FlaskApp/netplix/server/DATA/"
+    DATA_DIR = "../DATA/"
 else:
-    DATA_DIR = os.environ['OPENSHIFT_DATA_DIR']
+    DATA_DIR = "/var/www/FlaskApp/netplix/server/DATA/"
 
 DB_JSON_FILE = os.path.join(DATA_DIR,"db.json")
 if not os.path.exists(DB_JSON_FILE):
@@ -149,6 +148,9 @@ def search(search_string):
 @app.route("/play/<id>")
 def play(id):
     db_dict = load_db_file()
+    catalog = db_dict['catalog']
+    if id not in catalog.keys():
+        return "ERROR: Video with ID "+str(id)+" does not exist!", 404
     title = db_dict['catalog'][id]['title']
     return "You tried to play "+str(title)+"<br />ERROR: Not yet implemented"
 
