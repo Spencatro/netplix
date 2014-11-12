@@ -102,6 +102,7 @@ class VideoPlayer:
         self.vlc = DecoratedVLCWidget()
 
     def main(self, fname):
+        instance
         self.vlc.player.set_media(instance.media_new(fname))
         w = gtk.Window()
         w.add(self.vlc)
@@ -109,62 +110,7 @@ class VideoPlayer:
         w.connect("destroy", gtk.main_quit)
         gtk.main()
 
-class MultiVideoPlayer:
-    """Example multi-video player.
-
-    It plays multiple files side-by-side, with per-view and global controls.
-    """
-    def main(self, filenames):
-        # Build main window
-        window=gtk.Window()
-        mainbox=gtk.VBox()
-        videos=gtk.HBox()
-
-        window.add(mainbox)
-        mainbox.add(videos)
-
-        # Create VLC widgets
-        for fname in filenames:
-            v = DecoratedVLCWidget()
-            v.player.set_media(instance.media_new(fname))
-            videos.add(v)
-
-        # Create global toolbar
-        tb = gtk.Toolbar()
-        tb.set_style(gtk.TOOLBAR_ICONS)
-
-        def execute(b, methodname):
-            """Execute the given method on all VLC widgets.
-            """
-            for v in videos.get_children():
-                getattr(v.player, methodname)()
-            return True
-
-        for text, tooltip, stock, callback, arg in (
-            (_("Play"), _("Global play"), gtk.STOCK_MEDIA_PLAY, execute, "play"),
-            (_("Pause"), _("Global pause"), gtk.STOCK_MEDIA_PAUSE, execute, "pause"),
-            (_("Stop"), _("Global stop"), gtk.STOCK_MEDIA_STOP, execute, "stop"),
-            ):
-            b = gtk.ToolButton(stock)
-            b.set_tooltip_text(tooltip)
-            b.connect("clicked", callback, arg)
-            tb.insert(b, -1)
-
-        mainbox.pack_start(tb, expand=False)
-
-        window.show_all()
-        window.connect("destroy", gtk.main_quit)
-        gtk.main()
-
 if __name__ == '__main__':
-    if not sys.argv[1:]:
-       print "You must provide at least 1 movie filename"
-       sys.exit(1)
-    if len(sys.argv[1:]) == 1:
-        # Only 1 file. Simple interface
-        p=VideoPlayer()
-        p.main(sys.argv[1])
-    else:
-        # Multiple files.
-        p=MultiVideoPlayer()
-        p.main(sys.argv[1:])
+    # Only 1 file. Simple interface
+    p=VideoPlayer()
+    p.main(r'rtsp://104.236.30.164:5005/stream_name.sdp')
