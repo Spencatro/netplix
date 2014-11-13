@@ -8,8 +8,12 @@ from flask import render_template, abort
 from flask import request
 from werkzeug import secure_filename
 import requests
+import vlc
+import threading
 
 import config
+
+vlc_instance = vlc.Instance()
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -140,7 +144,19 @@ def play(id):
     if id not in catalog.keys():
         return "ERROR: Video with ID "+str(id)+" does not exist!", 404
     title = db_dict['catalog'][id]['title']
-    return "You tried to play "+str(title)+"<br />ERROR: Not yet implemented"
+    filepath = db_dict['catalog'][id]['filepath']
+
+    rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(id)+'.sdp'
+
+    def threading_target():
+        sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
+        vlc_instance.vlm_add_broadcast(str(id), filepath, sout, 0, None, True, False)
+        vlc_instance.vlm_play_media(str(id))
+
+    thread = threading.Thread(threading_target)
+    thread.start()
+
+    return "You tried to play "+str(title)+"<br />RTSP URI: "+rtsp_uri
 
 @app.route("/register_new_renderer/")
 def register_new_renderer():
