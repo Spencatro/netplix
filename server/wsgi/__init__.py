@@ -182,7 +182,7 @@ def register_new_renderer():
         pass
     return "ERROR: Your IP is not running a renderer webserver. Failed to register renderer."
 
-app.route('/myip/')
+@app.route('/myip/')
 def myip():
     return str(request.remote_addr)
 
