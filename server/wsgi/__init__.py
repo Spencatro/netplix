@@ -14,6 +14,13 @@ import threading
 
 import config
 
+if not os.path.exists(config.DB_JSON_FILE):
+    # make the empty db file
+    # Should only ever happen once
+    with open(config.DB_JSON_FILE, 'w') as fp:
+        empty_db = {"SCHEMA_VERSION":1.0}
+        json.dump(empty_db, fp)
+
 vlc_instance = vlc.Instance()
 
 def allowed_file(filename):

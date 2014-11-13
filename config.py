@@ -16,10 +16,4 @@ SERVER_IP = "104.236.30.164"
 
 DB_JSON_FILE = os.path.join(DATA_DIR,"db.json")
 
-if not os.path.exists(DB_JSON_FILE):
-    # make the empty db file
-    # Should only ever happen once
-    with open(DB_JSON_FILE, 'w') as fp:
-        empty_db = {"SCHEMA_VERSION":1.0}
-        json.dump(empty_db, fp)
 ALLOWED_EXTENSIONS = set(['mp4'])
