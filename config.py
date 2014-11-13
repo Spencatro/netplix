@@ -1,13 +1,12 @@
 __author__ = 'sxh112430'
 import os
 import json
+import os.path as path
 
 RUNNING_LOCALLY = False
-if not 'APACHE_LOCK_DIR' in os.environ:
-    RUNNING_LOCALLY = True
-    DATA_DIR = "../DATA/"
-else:
-    DATA_DIR = "/var/www/FlaskApp/netplix/server/DATA/"
+PROJECT_PATH = path.normpath(path.dirname(path.realpath(__file__)))
+RUNNING_LOCALLY = True
+DATA_DIR = path.join(PROJECT_PATH,"server","DATA")
 
 RENDERER_HTTP_PORT = 49678
 

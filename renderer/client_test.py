@@ -32,6 +32,22 @@ When called as an application, it behaves as a video player.
 
 $Id$
 """
+from flask import Flask
+import sys
+import os.path as path
+
+PROJECT_PATH = path.normpath(path.join(path.dirname(path.realpath(__file__)), ".."))
+
+sys.path.insert(0,PROJECT_PATH)
+
+import config
+
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
 
 import gtk
 gtk.gdk.threads_init()
@@ -102,7 +118,6 @@ class VideoPlayer:
         self.vlc = DecoratedVLCWidget()
 
     def main(self, fname):
-        instance
         self.vlc.player.set_media(instance.media_new(fname))
         w = gtk.Window()
         w.add(self.vlc)
@@ -114,3 +129,4 @@ if __name__ == '__main__':
     # Only 1 file. Simple interface
     p=VideoPlayer()
     p.main(r'rtsp://104.236.30.164:5005/stream_name.sdp')
+    app.run("0.0.0.0", config.RENDERER_HTTP_PORT)
