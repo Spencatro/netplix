@@ -153,7 +153,7 @@ def play(id):
         vlc_instance.vlm_add_broadcast(str(id), filepath, sout, 0, None, True, False)
         vlc_instance.vlm_play_media(str(id))
 
-    thread = threading.Thread(threading_target)
+    thread = threading.Thread(target=threading_target)
     thread.start()
 
     return "You tried to play "+str(title)+"<br />RTSP URI: "+rtsp_uri
