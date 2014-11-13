@@ -8,6 +8,7 @@ from flask import render_template, abort
 from flask import request
 from werkzeug import secure_filename
 import requests
+import time
 import vlc
 import threading
 
@@ -147,11 +148,13 @@ def play(id):
     filepath = db_dict['catalog'][id]['filepath']
 
     rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(id)+'.sdp'
+    sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
 
     def threading_target():
-        sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
         vlc_instance.vlm_add_broadcast(str(id), filepath, sout, 0, None, True, False)
         vlc_instance.vlm_play_media(str(id))
+        time.sleep(100)
+
 
     thread = threading.Thread(target=threading_target)
     thread.start()
