@@ -138,21 +138,21 @@ def search(search_string):
                 continue
     return jsonify(results_dict)
 
-@app.route("/play/<id>")
-def play(id):
+@app.route("/play/<resource_id>")
+def play(resource_id):
     db_dict = load_db_file()
     catalog = db_dict['catalog']
-    if id not in catalog.keys():
-        return "ERROR: Video with ID "+str(id)+" does not exist!", 404
-    title = db_dict['catalog'][id]['title']
-    filepath = db_dict['catalog'][id]['filepath']
+    if resource_id not in catalog.keys():
+        return "ERROR: Video with ID "+str(resource_id)+" does not exist!", 404
+    title = db_dict['catalog'][resource_id]['title']
+    filepath = db_dict['catalog'][resource_id]['filepath']
 
-    rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(id)+'.sdp'
+    rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
     sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
 
     def threading_target():
-        vlc_instance.vlm_add_broadcast(str(id), filepath, sout, 0, None, True, False)
-        vlc_instance.vlm_play_media(str(id))
+        vlc_instance.vlm_add_broadcast(str(resource_id), filepath, sout, 0, None, True, False)
+        vlc_instance.vlm_play_media(str(resource_id))
         time.sleep(100)
 
 
