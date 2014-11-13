@@ -2,7 +2,8 @@
 import sys
 import logging
 logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0,"/var/www/FlaskApp/netplix")
 sys.path.insert(0,"/var/www/FlaskApp/netplix/server")
 
 from wsgi import app as application
-application.secret_key = 'Add your secret key'
+application.secret_key = 'SUPER SECRET WAHAHA'

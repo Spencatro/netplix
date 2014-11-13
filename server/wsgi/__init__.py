@@ -9,35 +9,17 @@ from flask import request
 from werkzeug import secure_filename
 import requests
 
-RUNNING_LOCALLY = False
-if not 'APACHE_LOCK_DIR' in os.environ:
-    RUNNING_LOCALLY = True
-    DATA_DIR = "../DATA/"
-else:
-    DATA_DIR = "/var/www/FlaskApp/netplix/server/DATA/"
+import config
 
-RENDERER_HTTP_PORT = 49678
-
-RENDERER_STREAM_PORT = 49679
-SERVER_STREAM_PORT = 49680
-
-DB_JSON_FILE = os.path.join(DATA_DIR,"db.json")
-if not os.path.exists(DB_JSON_FILE):
-    # make the empty db file
-    # Should only ever happen once
-    with open(DB_JSON_FILE, 'w') as fp:
-        empty_db = {"SCHEMA_VERSION":1.0}
-        json.dump(empty_db, fp)
-ALLOWED_EXTENSIONS = set(['mp4'])
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1] in config.ALLOWED_EXTENSIONS
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = DATA_DIR
+app.config['UPLOAD_FOLDER'] = config.DATA_DIR
 
 def load_db_file():
-    with open(DB_JSON_FILE) as fp:
+    with open(config.DB_JSON_FILE) as fp:
         jsonificated = json.load(fp)
     return jsonificated
 
@@ -81,10 +63,10 @@ def upload():
             db_dict['catalog'][id_pointer] = {
                 'title':title,
                 'actors':actors,
-                'filepath':os.path.join(DATA_DIR,filename)
+                'filepath':os.path.join(config.DATA_DIR,filename)
             }
             db_dict["id_pointer"] = id_pointer+1
-            with open(DB_JSON_FILE,'w') as fp:
+            with open(config.DB_JSON_FILE,'w') as fp:
                 json.dump(db_dict, fp)
             return "Success! File "+str(filename)+" was uploaded"+str(actors)
         else:
@@ -103,7 +85,7 @@ def upload():
 
 @app.route("/clear_db_are_you_sure_yes_i_am")
 def clear_db():
-    with open(DB_JSON_FILE, 'w') as fp:
+    with open(config.DB_JSON_FILE, 'w') as fp:
         json.dump({'id_pointer':0,'catalog':{}}, fp)
     return "Success, db is empty"
 
@@ -161,13 +143,18 @@ def play(id):
     return "You tried to play "+str(title)+"<br />ERROR: Not yet implemented"
 
 @app.route("/register_new_renderer/")
-def register_new_renderer(ip):
+def register_new_renderer():
     new_ip = request.remote_addr
-    r = requests.get("http://"+str(new_ip)+":"+RENDERER_HTTP_PORT)
-    if r.status_code != 200:
-        return "ERROR: Your IP is not running a renderer webserver. Failed to register renderer."
-    else:
-        return "Your IP:"+str(request.remote_addr)+"<br>You said your IP is:"+str(ip)
+
+    request_addr = "http://"+str(new_ip)+":"+str(config.RENDERER_HTTP_PORT)
+    print request_addr
+    try:
+        r = requests.get(request_addr)
+        if r.status_code == 200:
+            return "Your IP:"+str(new_ip)
+    except:
+        pass
+    return "ERROR: Your IP is not running a renderer webserver. Failed to register renderer."
 
 @app.route("/list_renderers")
 def list_renderers():
