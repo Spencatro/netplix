@@ -155,6 +155,14 @@ def play(id):
     return "You tried to play "+str(title)+"<br />ERROR: Not yet implemented"
 
 
+@app.route("/register_new_renderer/<ip>")
+def register_new_renderer(ip):
+    return "Your IP:"+str(request.remote_addr)+"<br>You said your IP is:"+str(ip)
+
+@app.route("/list_renderers")
+def list_renderers():
+    pass
+
 
 if __name__ == "__main__":
     pass
