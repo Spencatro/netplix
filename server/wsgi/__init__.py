@@ -7,6 +7,7 @@ from flask import Flask, jsonify, request, redirect, url_for
 from flask import render_template, abort
 from flask import request
 from werkzeug import secure_filename
+import requests
 
 RUNNING_LOCALLY = False
 if not 'APACHE_LOCK_DIR' in os.environ:
@@ -14,6 +15,11 @@ if not 'APACHE_LOCK_DIR' in os.environ:
     DATA_DIR = "../DATA/"
 else:
     DATA_DIR = "/var/www/FlaskApp/netplix/server/DATA/"
+
+RENDERER_HTTP_PORT = 49678
+
+RENDERER_STREAM_PORT = 49679
+SERVER_STREAM_PORT = 49680
 
 DB_JSON_FILE = os.path.join(DATA_DIR,"db.json")
 if not os.path.exists(DB_JSON_FILE):
@@ -154,10 +160,14 @@ def play(id):
     title = db_dict['catalog'][id]['title']
     return "You tried to play "+str(title)+"<br />ERROR: Not yet implemented"
 
-
-@app.route("/register_new_renderer/<ip>")
+@app.route("/register_new_renderer/")
 def register_new_renderer(ip):
-    return "Your IP:"+str(request.remote_addr)+"<br>You said your IP is:"+str(ip)
+    new_ip = request.remote_addr
+    r = requests.get("http://"+str(new_ip)+":"+RENDERER_HTTP_PORT)
+    if r.status_code != 200:
+        return "ERROR: Your IP is not running a renderer webserver. Failed to register renderer."
+    else:
+        return "Your IP:"+str(request.remote_addr)+"<br>You said your IP is:"+str(ip)
 
 @app.route("/list_renderers")
 def list_renderers():
