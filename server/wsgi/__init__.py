@@ -165,8 +165,8 @@ def play(resource_id):
 
     thread = threading.Thread(target=threading_target)
     thread.start()
-
-    return "You tried to play "+str(title)+"<br />RTSP URI: "+rtsp_uri
+    
+    return jsonify({'rtsp':rtsp_uri})
 
 @app.route("/register_new_renderer/")
 def register_new_renderer():
