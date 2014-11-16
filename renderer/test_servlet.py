@@ -10,8 +10,10 @@ RENDERER_STREAM_PORT = 49679
 SERVER_STREAM_PORT = 49680
 SERVER_IP = "104.236.30.164"
 
-rtsp_uri = 'rtsp://'+str(SERVER_IP)+':'+str(RENDERER_STREAM_PORT)+'/'+str(id)+'.sdp'
+rtsp_uri = 'rtsp://'+str(SERVER_IP)+':'+str(RENDERER_STREAM_PORT)+'/'+str(0)+'.sdp'
 sout = '#rtp{dst='+SERVER_IP+',port='+str(SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
+
+print rtsp_uri
 
 instance.vlm_add_broadcast("Test Media", r'/var/www/FlaskApp/netplix/server/DATA/bella+afp.mp4', sout, 0, None, True, False)
 instance.vlm_play_media("Test Media")
