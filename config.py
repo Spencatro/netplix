@@ -13,6 +13,7 @@ RENDERER_STREAM_PORT = 49679
 
 SERVER_STREAM_PORT = 49680
 SERVER_IP = "104.236.30.164"
+SERVER_URL = "http://np.spencer-hawkins.com"
 
 DB_JSON_FILE = os.path.join(DATA_DIR,"db.json")
 
