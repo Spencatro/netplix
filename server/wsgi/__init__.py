@@ -80,7 +80,7 @@ class NetplixApp(Flask):
                ""
 
     def catalog(self):
-        return jsonify(self.load_db_file()['catalog'])
+        return jsonify({'catalog':self.load_db_file()['catalog']})
 
     def threadtest(self):
         pass
@@ -141,8 +141,9 @@ class NetplixApp(Flask):
         catalog = db_dict['catalog']
         for object in catalog:
             if title.lower() in object['title'].lower():
-                results_arr.append(object)
-        return jsonify(results_arr)
+                    if object not in results_arr:
+                        results_arr.append(object)
+        return jsonify({'results':results_arr})
 
 
     def search_by_actor(self, actor):
@@ -152,8 +153,9 @@ class NetplixApp(Flask):
         for object in catalog:
             for actor_string in object['actors']:
                 if actor.lower() in actor_string.lower():
-                    results_arr.append(object)
-        return jsonify(results_arr)
+                    if object not in results_arr:
+                        results_arr.append(object)
+        return jsonify({'results':results_arr})
 
     def search(self, search_string):
         db_dict = self.load_db_file()
@@ -161,13 +163,15 @@ class NetplixApp(Flask):
         catalog = db_dict['catalog']
         for object in catalog:
             if search_string.lower() in object['title'].lower():
-                results_arr.append(object)
-                continue
-            for actor in object['actors']:
-                if search_string.lower() in actor.lower():
+                if object not in results_arr:
                     results_arr.append(object)
                     continue
-        return jsonify(results_arr)
+            for actor in object['actors']:
+                if search_string.lower() in actor.lower():
+                    if object not in results_arr:
+                        results_arr.append(object)
+                        continue
+        return jsonify({'results':results_arr})
 
     def stop_all(self):
         result = ""
