@@ -193,14 +193,6 @@ class NetplixApp(Flask):
 
         thread = threading.Thread(target=threading_target)
         thread.start()
-
-        db_dict['now_playing'] = {
-            'rtsp':rtsp_uri,
-            'resource_id':resource_id
-        }
-
-        with open(config.DB_JSON_FILE,'w') as fp:
-            json.dump(db_dict, fp)
         
         return jsonify({'rtsp':rtsp_uri, "result":result})
 
@@ -211,18 +203,14 @@ class NetplixApp(Flask):
 
     def cron_proc(self):
         db_dict = self.load_db_file()
-        max_id = int(db_dict['id_pointer'])
-        for potential_playing_id in range(max_id):
-            pass
-        now_playing = db_dict['now_playing']
-        if now_playing != None:
-            resource_id = now_playing['resource_id']
+        for resource_id in self.get_playing_list():
             res = vlc_instance.vlm_show_media(str(resource_id))
             if not hasattr(res, 'title'):
                 db_dict['now_playing'] = None
                 with open(config.DB_JSON_FILE,'w') as fp:
                     json.dump(db_dict, fp)
-        return "success"
+                    return "success"
+        return "no update"
 
     def show_vlm(self, resource_id):
         res = vlc_instance.vlm_show_media(str(resource_id))
