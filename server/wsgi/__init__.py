@@ -44,6 +44,7 @@ class NetplixApp(Flask):
         self.route("/search/<search_string>")(self.search)
         self.route("/play/<resource_id>")(self.play)
         self.route("/heartbeat/")(self.heartbeat)
+        self.route("/show/")(self.show_vlm)
 
         # self.playing_list is a list of playing files
         self.playing_list_rtsp_uris = []
@@ -180,6 +181,10 @@ class NetplixApp(Flask):
 
     def heartbeat(self):
         return jsonify(self.playing_list_rtsp_uris)
+
+    def show_vlm(self):
+        res = vlc_instance.vlm_show_media()
+        return str(dir(res))
 
 
 app = NetplixApp(__name__)
