@@ -100,11 +100,12 @@ class NetplixApp(Flask):
                 if not 'id_pointer' in db_dict:
                     db_dict['id_pointer'] = 10 # Just in case
                 id_pointer = int(db_dict['id_pointer'])
-                db_dict['catalog'][id_pointer] = {
+                db_dict['catalog'].append({
+                    'id':id_pointer,
                     'title':title,
                     'actors':actors,
                     'filepath':os.path.join(config.DATA_DIR,filename)
-                }
+                })
                 db_dict["id_pointer"] = id_pointer+1
                 with open(config.DB_JSON_FILE,'w') as fp:
                     json.dump(db_dict, fp)
@@ -125,7 +126,7 @@ class NetplixApp(Flask):
 
     def clear_db(self):
         with open(config.DB_JSON_FILE, 'w') as fp:
-            json.dump({'id_pointer':0,'catalog':{}}, fp)
+            json.dump({'id_pointer':0,'catalog':[]}, fp)
         return "Success, db is empty"
 
     def envinfo(self):
@@ -136,37 +137,37 @@ class NetplixApp(Flask):
 
     def search_by_title(self, title):
         db_dict = self.load_db_file()
-        results_dict = {}
+        results_arr = []
         catalog = db_dict['catalog']
-        for key in catalog.keys():
-            if title.lower() in catalog[key]['title'].lower():
-                results_dict[key] = catalog[key]
-        return jsonify(results_dict)
+        for object in catalog:
+            if title.lower() in object['title'].lower():
+                results_arr.append(object)
+        return jsonify(results_arr)
 
 
     def search_by_actor(self, actor):
         db_dict = self.load_db_file()
-        results_dict = {}
+        results_arr = []
         catalog = db_dict['catalog']
-        for key in catalog.keys():
-            for actor_string in catalog[key]['actors']:
+        for object in catalog:
+            for actor_string in object['actors']:
                 if actor.lower() in actor_string.lower():
-                    results_dict[key] = catalog[key]
-        return jsonify(results_dict)
+                    results_arr.append(object)
+        return jsonify(results_arr)
 
     def search(self, search_string):
         db_dict = self.load_db_file()
-        results_dict = {}
+        results_arr = []
         catalog = db_dict['catalog']
-        for key in catalog.keys():
-            if search_string.lower() in catalog[key]['title'].lower():
-                results_dict[key] = catalog[key]
+        for object in catalog:
+            if search_string.lower() in object['title'].lower():
+                results_arr.append(object)
                 continue
-            for actor in catalog[key]['actors']:
+            for actor in object['actors']:
                 if search_string.lower() in actor.lower():
-                    results_dict[key] = catalog[key]
+                    results_arr.append(object)
                     continue
-        return jsonify(results_dict)
+        return jsonify(results_arr)
 
     def stop_all(self):
         result = ""
@@ -181,7 +182,8 @@ class NetplixApp(Flask):
         time.sleep(.1)
         db_dict = self.load_db_file()
         catalog = db_dict['catalog']
-        if resource_id not in catalog.keys():
+        if object not in catalog:
+            resource_id = object['id']
             return "ERROR: Video with ID "+str(resource_id)+" does not exist!", 404
         title = db_dict['catalog'][resource_id]['title']
         filepath = db_dict['catalog'][resource_id]['filepath']
@@ -193,7 +195,6 @@ class NetplixApp(Flask):
             vlc_instance.vlm_add_broadcast(str(resource_id), filepath, sout, 0, None, True, False)
             vlc_instance.vlm_play_media(str(resource_id))
             time.sleep(100)
-
 
         thread = threading.Thread(target=threading_target)
         thread.start()
@@ -223,7 +224,6 @@ class NetplixApp(Flask):
     def show_vlm(self, resource_id):
         res = vlc_instance.vlm_show_media(str(resource_id))
         return str(dir(res))
-
 
 app = NetplixApp(__name__)
 app.config['UPLOAD_FOLDER'] = config.DATA_DIR
