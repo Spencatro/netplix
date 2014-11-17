@@ -32,22 +32,18 @@ When called as an application, it behaves as a video player.
 
 $Id$
 """
-from flask import Flask
+import json
 import sys
 import os.path as path
+import threading
+import time
+import requests
 
 PROJECT_PATH = path.normpath(path.join(path.dirname(path.realpath(__file__)), ".."))
 
 sys.path.insert(0,PROJECT_PATH)
 
 import config
-
-
-app = Flask(__name__)
-
-@app.route('/')
-def hello_world():
-    return 'Hello World!'
 
 import gtk
 gtk.gdk.threads_init()
@@ -117,8 +113,41 @@ class VideoPlayer:
     def __init__(self):
         self.vlc = DecoratedVLCWidget()
 
-    def main(self, fname):
-        self.vlc.player.set_media(instance.media_new(fname))
+    def update_media(self, new_media):
+        self.vlc.player.set_media(instance.media_new(new_media))
+
+    def make_request(self, pass_number = 1):
+        result = None
+        http_result = requests.get(config.SERVER_URL+"/heartbeat/")
+        try:
+            result = json.loads(http_result.text)
+        except:
+            pass
+        if not result or result['uri'] == None:
+            if pass_number < 3:
+                time.sleep(.5)
+                return self.make_request(pass_number+1)
+            else:
+                return None
+        return result['uri']
+
+    def heartbeat(self):
+        while(1):
+            time.sleep(1)
+            uri = self.make_request()
+            if uri != self.uri:
+                print uri
+                self.uri = uri
+                if uri:
+                    self.update_media(self.uri)
+                    self.vlc.player.play()
+                else:
+                    self.vlc.player.stop()
+
+    def main(self):
+        self.heartbeat_thread = threading.Thread(target=self.heartbeat)
+        self.heartbeat_thread.start()
+        self.uri = ""
         w = gtk.Window()
         w.add(self.vlc)
         w.show_all()
@@ -128,5 +157,4 @@ class VideoPlayer:
 if __name__ == '__main__':
     # Only 1 file. Simple interface
     p=VideoPlayer()
-    p.main(r'rtsp://104.236.30.164:5005/stream_name.sdp')
-    app.run("0.0.0.0", config.RENDERER_HTTP_PORT)
+    p.main()
