@@ -204,10 +204,7 @@ class NetplixApp(Flask):
     def cron_proc(self):
         db_dict = self.load_db_file()
         for resource_id in self.get_playing_list():
-            db_dict['now_playing'] = {
-                'rtsp':'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp',
-                'resource_id':resource_id
-            }
+            db_dict['now_playing'] = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
             with open(config.DB_JSON_FILE,'w') as fp:
                 json.dump(db_dict, fp)
                 return "success"
