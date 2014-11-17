@@ -172,7 +172,7 @@ class NetplixApp(Flask):
         return "Success: "+result
 
     def play(self, resource_id):
-        self.stop_all()
+        result = self.stop_all()
         time.sleep(.1)
         db_dict = self.load_db_file()
         catalog = db_dict['catalog']
@@ -201,7 +201,7 @@ class NetplixApp(Flask):
         with open(config.DB_JSON_FILE,'w') as fp:
             json.dump(db_dict, fp)
         
-        return jsonify({'rtsp':rtsp_uri})
+        return jsonify({'rtsp':rtsp_uri, "result":result})
 
     def heartbeat(self):
         db = self.load_db_file()
