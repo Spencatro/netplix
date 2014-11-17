@@ -209,7 +209,7 @@ class NetplixApp(Flask):
         db_dict = self.load_db_file()
         max_id = int(db_dict['id_pointer'])
         for potential_playing_id in range(max_id):
-
+            pass
         now_playing = db_dict['now_playing']
         if now_playing != None:
             resource_id = now_playing['resource_id']
