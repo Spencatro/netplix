@@ -45,6 +45,7 @@ class NetplixApp(Flask):
         self.route("/play/<resource_id>")(self.play)
         self.route("/heartbeat/")(self.heartbeat)
         self.route("/show/<resource_id>/")(self.show_vlm)
+        self.route("/cron_trigger/")(self.cron_proc)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
@@ -172,7 +173,10 @@ class NetplixApp(Flask):
         thread = threading.Thread(target=threading_target)
         thread.start()
 
-        db_dict['now_playing'] = rtsp_uri
+        db_dict['now_playing'] = {
+            'rtsp':rtsp_uri,
+            'resource_id':resource_id
+        }
 
         with open(config.DB_JSON_FILE,'w') as fp:
             json.dump(db_dict, fp)
@@ -183,6 +187,18 @@ class NetplixApp(Flask):
         db = self.load_db_file()
         uri = db['now_playing']
         return jsonify({'uri':uri})
+
+    def cron_proc(self):
+        db_dict = self.load_db_file()
+        now_playing = db_dict['now_playing']
+        if now_playing != None:
+            resource_id = now_playing['id']
+            res = vlc_instance.vlm_show_media(str(resource_id))
+            if not hasattr(res, 'title'):
+                db_dict['now_playing'] = None
+                with open(config.DB_JSON_FILE,'w') as fp:
+                    json.dump(db_dict, fp)
+        return "success"
 
     def show_vlm(self, resource_id):
         res = vlc_instance.vlm_show_media(str(resource_id))
