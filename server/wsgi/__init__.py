@@ -165,9 +165,11 @@ class NetplixApp(Flask):
         return jsonify(results_dict)
 
     def stop_all(self):
+        result = ""
         for resource_id in self.get_playing_list():
+            result += str(resource_id)+" "
             vlc_instance.vlm_stop_media(str(resource_id))
-        return "Success"
+        return "Success: "+result
 
     def play(self, resource_id):
         self.stop_all()
