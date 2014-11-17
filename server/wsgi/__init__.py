@@ -46,9 +46,6 @@ class NetplixApp(Flask):
         self.route("/heartbeat/")(self.heartbeat)
         self.route("/show/")(self.show_vlm)
 
-        # self.playing_list is a list of playing files
-        self.playing_list_rtsp_uris = []
-
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
             jsonificated = json.load(fp)
@@ -175,12 +172,17 @@ class NetplixApp(Flask):
         thread = threading.Thread(target=threading_target)
         thread.start()
 
-        self.playing_list_rtsp_uris.append(rtsp_uri)
+        db_dict['now_playing'] = rtsp_uri
+
+        with open(config.DB_JSON_FILE,'w') as fp:
+            json.dump(db_dict, fp)
         
         return jsonify({'rtsp':rtsp_uri})
 
     def heartbeat(self):
-        return jsonify(self.playing_list_rtsp_uris)
+        db = self.load_db_file()
+        uri = db['now_playing']
+        return jsonify({'uri':uri})
 
     def show_vlm(self):
         res = vlc_instance.vlm_show_media()
