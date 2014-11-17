@@ -9,10 +9,10 @@ from flask import request
 from werkzeug import secure_filename
 import requests
 import time
-import vlc
 import threading
 
 import config
+import vlc
 
 if not os.path.exists(config.DB_JSON_FILE):
     # make the empty db file
@@ -27,169 +27,163 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in config.ALLOWED_EXTENSIONS
 
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = config.DATA_DIR
+class NetplixApp(Flask):
 
-def load_db_file():
-    with open(config.DB_JSON_FILE) as fp:
-        jsonificated = json.load(fp)
-    return jsonificated
+    def __init__(self, arg):
+        #
+        super(NetplixApp, self).__init__(arg)
+        self.route("/")(self.index)
+        self.route("/index")(self.index)
+        self.route('/threadtest')(self.threadtest)
+        self.route('/upbloat', methods=['GET', 'POST'])(self.upload)
+        self.route("/clear_db_are_you_sure_yes_i_am")(self.clear_db)
+        self.route("/envinfo")(self.envinfo)
+        self.route("/dbdump")(self.dbdump)
+        self.route("/search/by_title/<title>")(self.search_by_title)
+        self.route("/search/by_actor/<actor>")(self.search_by_actor)
+        self.route("/search/<search_string>")(self.search)
+        self.route("/play/<resource_id>")(self.play)
+        self.route("/heartbeat/")(self.heartbeat)
+
+        # self.playing_list is a list of playing files
+        self.playing_list_rtsp_uris = []
+
+    def load_db_file(self):
+        with open(config.DB_JSON_FILE) as fp:
+            jsonificated = json.load(fp)
+        return jsonificated
+
+    def index(self):
+        return "<h1>Netplix server</h1>" \
+               "<p>The following is a short API for the Netplix server</p>" \
+               "<p>All pages return a json file. Most languages can trivially parse json.</p>" \
+               "<p><b>http://root-url/search/[some string]</b>: searches both titles and actor lists<br>" \
+               "<b>http://root-url/search/by_actor/[some string]</b>: searches by actor list only<br>" \
+               "<b>http://root-url/search/by_title/[some string]</b>: searches by title only<br>" \
+               "<b>http://root-url/dbdump</b>: shows a dump of the current database<br>" \
+               "<b>http://root-url/envinfo</b>: lists all environment variables<br>" \
+               "<b>http://root-url/play/[Integer ID]</b>: NOT IMPLEMENTED: begins playing title by ID--not title!<br>" \
+               "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: Deletes all entries in the database<br>" \
+               "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: upload page</p>" \
+               ""
+
+    def threadtest(self):
+        pass
 
 
-#Create our index or root / route
-@app.route("/")
-@app.route("/index")
-def index():
-    return "<h1>Netplix server</h1>" \
-           "<p>The following is a short API for the Netplix server</p>" \
-           "<p>All pages return a json file. Most languages can trivially parse json.</p>" \
-           "<p><b>http://root-url/search/[some string]</b>: searches both titles and actor lists<br>" \
-           "<b>http://root-url/search/by_actor/[some string]</b>: searches by actor list only<br>" \
-           "<b>http://root-url/search/by_title/[some string]</b>: searches by title only<br>" \
-           "<b>http://root-url/dbdump</b>: shows a dump of the current database<br>" \
-           "<b>http://root-url/envinfo</b>: lists all environment variables<br>" \
-           "<b>http://root-url/play/[Integer ID]</b>: NOT IMPLEMENTED: begins playing title by ID--not title!<br>" \
-           "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: Deletes all entries in the database<br>" \
-           "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: upload page</p>" \
-           ""
+    def upload(self):
+        if request.method == 'POST':
+            file = request.files['file']
+            actors = request.form['actors'].split(",")
+            title = request.form['title']
+            if not actors or not title:
+                return "Error: Must complete form!"
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                db_dict = self.load_db_file()
+                if not 'id_pointer' in db_dict:
+                    db_dict['id_pointer'] = 10 # Just in case
+                id_pointer = int(db_dict['id_pointer'])
+                db_dict['catalog'][id_pointer] = {
+                    'title':title,
+                    'actors':actors,
+                    'filepath':os.path.join(config.DATA_DIR,filename)
+                }
+                db_dict["id_pointer"] = id_pointer+1
+                with open(config.DB_JSON_FILE,'w') as fp:
+                    json.dump(db_dict, fp)
+                return "Success! File "+str(filename)+" was uploaded"+str(actors)
+            else:
+                return "Error: File "+str(file.filename)+" is not in allowed filetype list."
+        return '''
+        <!doctype html>
+        <title>Upload new File</title>
+        <h1>Upload new File</h1>
+        <form action="" method=post enctype=multipart/form-data>
+          <p><input type=file name=file><br>
+             Title:<input type=text name=title><br>
+             Actors (comma separated):<input type=text name=actors><br>
+             <input type=submit value=Upload>
+        </form>
+        '''
 
-@app.route('/threadtest')
-def threadtest():
-    pass
+    def clear_db(self):
+        with open(config.DB_JSON_FILE, 'w') as fp:
+            json.dump({'id_pointer':0,'catalog':{}}, fp)
+        return "Success, db is empty"
 
-@app.route('/upbloat', methods=['GET', 'POST'])
-def upload():
-    if request.method == 'POST':
-        file = request.files['file']
-        actors = request.form['actors'].split(",")
-        title = request.form['title']
-        if not actors or not title:
-            return "Error: Must complete form!"
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            db_dict = load_db_file()
-            if not 'id_pointer' in db_dict:
-                db_dict['id_pointer'] = 10 # Just in case
-            id_pointer = int(db_dict['id_pointer'])
-            db_dict['catalog'][id_pointer] = {
-                'title':title,
-                'actors':actors,
-                'filepath':os.path.join(config.DATA_DIR,filename)
-            }
-            db_dict["id_pointer"] = id_pointer+1
-            with open(config.DB_JSON_FILE,'w') as fp:
-                json.dump(db_dict, fp)
-            return "Success! File "+str(filename)+" was uploaded"+str(actors)
-        else:
-            return "Error: File "+str(file.filename)+" is not in allowed filetype list."
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form action="" method=post enctype=multipart/form-data>
-      <p><input type=file name=file><br>
-         Title:<input type=text name=title><br>
-         Actors (comma separated):<input type=text name=actors><br>
-         <input type=submit value=Upload>
-    </form>
-    '''
+    def envinfo(self):
+        return jsonify(os.environ)
 
-@app.route("/clear_db_are_you_sure_yes_i_am")
-def clear_db():
-    with open(config.DB_JSON_FILE, 'w') as fp:
-        json.dump({'id_pointer':0,'catalog':{}}, fp)
-    return "Success, db is empty"
+    def dbdump(self):
+        return jsonify(self.load_db_file())
 
-@app.route("/envinfo")
-def envinfo():
-    return jsonify(os.environ)
-
-@app.route("/dbdump")
-def dbdump():
-    return jsonify(load_db_file())
-
-@app.route("/search/by_title/<title>")
-def search_by_title(title):
-    db_dict = load_db_file()
-    results_dict = {}
-    catalog = db_dict['catalog']
-    for key in catalog.keys():
-        if title.lower() in catalog[key]['title'].lower():
-            results_dict[key] = catalog[key]
-    return jsonify(results_dict)
-
-@app.route("/search/by_actor/<actor>")
-def search_by_actor(actor):
-    db_dict = load_db_file()
-    results_dict = {}
-    catalog = db_dict['catalog']
-    for key in catalog.keys():
-        for actor_string in catalog[key]['actors']:
-            if actor.lower() in actor_string.lower():
+    def search_by_title(self, title):
+        db_dict = self.load_db_file()
+        results_dict = {}
+        catalog = db_dict['catalog']
+        for key in catalog.keys():
+            if title.lower() in catalog[key]['title'].lower():
                 results_dict[key] = catalog[key]
-    return jsonify(results_dict)
+        return jsonify(results_dict)
 
-@app.route("/search/<search_string>")
-def search(search_string):
-    db_dict = load_db_file()
-    results_dict = {}
-    catalog = db_dict['catalog']
-    for key in catalog.keys():
-        if search_string.lower() in catalog[key]['title'].lower():
-            results_dict[key] = catalog[key]
-            continue
-        for actor in catalog[key]['actors']:
-            if search_string.lower() in actor.lower():
+
+    def search_by_actor(self, actor):
+        db_dict = self.load_db_file()
+        results_dict = {}
+        catalog = db_dict['catalog']
+        for key in catalog.keys():
+            for actor_string in catalog[key]['actors']:
+                if actor.lower() in actor_string.lower():
+                    results_dict[key] = catalog[key]
+        return jsonify(results_dict)
+
+    def search(self, search_string):
+        db_dict = self.load_db_file()
+        results_dict = {}
+        catalog = db_dict['catalog']
+        for key in catalog.keys():
+            if search_string.lower() in catalog[key]['title'].lower():
                 results_dict[key] = catalog[key]
                 continue
-    return jsonify(results_dict)
-
-@app.route("/play/<resource_id>")
-def play(resource_id):
-    db_dict = load_db_file()
-    catalog = db_dict['catalog']
-    if resource_id not in catalog.keys():
-        return "ERROR: Video with ID "+str(resource_id)+" does not exist!", 404
-    title = db_dict['catalog'][resource_id]['title']
-    filepath = db_dict['catalog'][resource_id]['filepath']
-
-    rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
-    sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
-
-    def threading_target():
-        vlc_instance.vlm_add_broadcast(str(resource_id), filepath, sout, 0, None, True, False)
-        vlc_instance.vlm_play_media(str(resource_id))
-        time.sleep(100)
+            for actor in catalog[key]['actors']:
+                if search_string.lower() in actor.lower():
+                    results_dict[key] = catalog[key]
+                    continue
+        return jsonify(results_dict)
 
 
-    thread = threading.Thread(target=threading_target)
-    thread.start()
-    
-    return jsonify({'rtsp':rtsp_uri})
+    def play(self, resource_id):
+        db_dict = self.load_db_file()
+        catalog = db_dict['catalog']
+        if resource_id not in catalog.keys():
+            return "ERROR: Video with ID "+str(resource_id)+" does not exist!", 404
+        title = db_dict['catalog'][resource_id]['title']
+        filepath = db_dict['catalog'][resource_id]['filepath']
 
-@app.route("/register_new_renderer/")
-def register_new_renderer():
-    new_ip = request.remote_addr
+        rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
+        sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
 
-    request_addr = "http://"+str(new_ip)+":"+str(config.RENDERER_HTTP_PORT)
-    print request_addr
-    try:
-        r = requests.get(request_addr)
-        if r.status_code == 200:
-            return "Your IP:"+str(new_ip)
-    except:
-        pass
-    return "ERROR: Your IP is not running a renderer webserver. Failed to register renderer."
+        def threading_target():
+            vlc_instance.vlm_add_broadcast(str(resource_id), filepath, sout, 0, None, True, False)
+            vlc_instance.vlm_play_media(str(resource_id))
+            time.sleep(100)
 
-@app.route('/myip/')
-def myip():
-    return str(request.remote_addr)
 
-@app.route("/list_renderers")
-def list_renderers():
-    pass
+        thread = threading.Thread(target=threading_target)
+        thread.start()
 
+        self.playing_list_rtsp_uris.append(rtsp_uri)
+        
+        return jsonify({'rtsp':rtsp_uri})
+
+    def heartbeat(self):
+        return jsonify(self.playing_list_rtsp_uris)
+
+
+app = NetplixApp(__name__)
+app.config['UPLOAD_FOLDER'] = config.DATA_DIR
 
 if __name__ == "__main__":
     pass
