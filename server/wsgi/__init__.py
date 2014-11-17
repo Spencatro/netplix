@@ -47,6 +47,7 @@ class NetplixApp(Flask):
         self.route("/show/<resource_id>/")(self.show_vlm)
         self.route("/stop_all/")(self.stop_all)
         self.route("/cron_trigger/")(self.cron_proc)
+        self.route("/catalog/")(self.catalog)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
@@ -77,6 +78,9 @@ class NetplixApp(Flask):
                "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: Deletes all entries in the database<br>" \
                "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: upload page</p>" \
                ""
+
+    def catalog(self):
+        return jsonify(self.load_db_file()['catalog'])
 
     def threadtest(self):
         pass
