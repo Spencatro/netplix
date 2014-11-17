@@ -33,24 +33,36 @@ class NetplixApp(Flask):
         #
         super(NetplixApp, self).__init__(arg)
         self.route("/")(self.index)
-        self.route("/index")(self.index)
-        self.route('/threadtest')(self.threadtest)
-        self.route('/upbloat', methods=['GET', 'POST'])(self.upload)
-        self.route("/clear_db_are_you_sure_yes_i_am")(self.clear_db)
-        self.route("/envinfo")(self.envinfo)
-        self.route("/dbdump")(self.dbdump)
-        self.route("/search/by_title/<title>")(self.search_by_title)
-        self.route("/search/by_actor/<actor>")(self.search_by_actor)
-        self.route("/search/<search_string>")(self.search)
-        self.route("/play/<resource_id>")(self.play)
+        self.route("/index/")(self.index)
+        self.route('/threadtest/')(self.threadtest)
+        self.route('/upbloat/', methods=['GET', 'POST'])(self.upload)
+        self.route("/clear_db_are_you_sure_yes_i_am/")(self.clear_db)
+        self.route("/envinfo/")(self.envinfo)
+        self.route("/dbdump/")(self.dbdump)
+        self.route("/search/by_title/<title>/")(self.search_by_title)
+        self.route("/search/by_actor/<actor>/")(self.search_by_actor)
+        self.route("/search/<search_string>/")(self.search)
+        self.route("/play/<resource_id>/")(self.play)
         self.route("/heartbeat/")(self.heartbeat)
         self.route("/show/<resource_id>/")(self.show_vlm)
+        self.route("/stop_all/")(self.stop_all)
         self.route("/cron_trigger/")(self.cron_proc)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
             jsonificated = json.load(fp)
         return jsonificated
+
+    def get_playing_list(self):
+        playing_list = []
+        db_dict = self.load_db_file()
+        max_id = int(db_dict['id_pointer'])
+        for potential_id in range(max_id):
+            res = vlc_instance.vlm_show_media(str(potential_id))
+            if hasattr(res, 'title'):
+                playing_list.append(potential_id)
+        return playing_list
+
 
     def index(self):
         return "<h1>Netplix server</h1>" \
@@ -152,8 +164,13 @@ class NetplixApp(Flask):
                     continue
         return jsonify(results_dict)
 
+    def stop_all(self):
+        for resource_id in self.get_playing_list():
+            vlc_instance.vlm_stop_media(str(resource_id))
 
     def play(self, resource_id):
+        self.stop_all()
+        time.sleep(.1)
         db_dict = self.load_db_file()
         catalog = db_dict['catalog']
         if resource_id not in catalog.keys():
@@ -190,6 +207,9 @@ class NetplixApp(Flask):
 
     def cron_proc(self):
         db_dict = self.load_db_file()
+        max_id = int(db_dict['id_pointer'])
+        for potential_playing_id in range(max_id):
+
         now_playing = db_dict['now_playing']
         if now_playing != None:
             resource_id = now_playing['resource_id']
