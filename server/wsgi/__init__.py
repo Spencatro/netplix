@@ -44,7 +44,7 @@ class NetplixApp(Flask):
         self.route("/search/<search_string>")(self.search)
         self.route("/play/<resource_id>")(self.play)
         self.route("/heartbeat/")(self.heartbeat)
-        self.route("/show/")(self.show_vlm)
+        self.route("/show/<resource_id>/")(self.show_vlm)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
@@ -184,8 +184,8 @@ class NetplixApp(Flask):
         uri = db['now_playing']
         return jsonify({'uri':uri})
 
-    def show_vlm(self):
-        res = vlc_instance.vlm_show_media()
+    def show_vlm(self, resource_id):
+        res = vlc_instance.vlm_show_media(str(resource_id))
         return str(dir(res))
 
 
