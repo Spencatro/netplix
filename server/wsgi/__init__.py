@@ -169,6 +169,7 @@ class NetplixApp(Flask):
         for resource_id in self.get_playing_list():
             result += str(resource_id)+" "
             vlc_instance.vlm_stop_media(str(resource_id))
+            vlc_instance.vlm_del_media(str(resource_id))
         return "Success: "+result
 
     def play(self, resource_id):
