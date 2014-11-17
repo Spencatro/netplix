@@ -192,7 +192,7 @@ class NetplixApp(Flask):
         db_dict = self.load_db_file()
         now_playing = db_dict['now_playing']
         if now_playing != None:
-            resource_id = now_playing['id']
+            resource_id = now_playing['resource_id']
             res = vlc_instance.vlm_show_media(str(resource_id))
             if not hasattr(res, 'title'):
                 db_dict['now_playing'] = None
