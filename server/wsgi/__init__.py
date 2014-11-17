@@ -167,6 +167,7 @@ class NetplixApp(Flask):
     def stop_all(self):
         for resource_id in self.get_playing_list():
             vlc_instance.vlm_stop_media(str(resource_id))
+        return "Success"
 
     def play(self, resource_id):
         self.stop_all()
