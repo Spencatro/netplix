@@ -203,11 +203,17 @@ class NetplixApp(Flask):
 
     def cron_proc(self):
         db_dict = self.load_db_file()
+        playing_list = self.get_playing_list()
+        if len(playing_list) == 0:
+            db_dict['now_playing'] = None
+            with open(config.DB_JSON_FILE,'w') as fp:
+                json.dump(db_dict, fp)
+            return "Stream stopped"
         for resource_id in self.get_playing_list():
             db_dict['now_playing'] = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
             with open(config.DB_JSON_FILE,'w') as fp:
                 json.dump(db_dict, fp)
-                return "success"
+            return "Stream running: "+str(resource_id)
         return "no update"
 
     def show_vlm(self, resource_id):
