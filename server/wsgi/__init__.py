@@ -99,7 +99,7 @@ class NetplixApp(Flask):
         return jsonify({'status':'success'})
 
     def status(self, resource_id):
-        return jsonify(self.vlc_instance.vlm_show_media(resource_id))
+        return jsonify({'what':self.vlc_instance.vlm_show_media(resource_id)})
 
     def upload(self):
         if request.method == 'POST':
