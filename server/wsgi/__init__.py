@@ -97,7 +97,7 @@ class NetplixApp(Flask):
         except:
             return jsonify({'status':'error'}), 500
         current_percent = float(status['position'])
-        if current_percent > percent:
+        if current_percent > float(percent):
             # mad haxx
             self.stop_all()
             time.sleep(.5)
