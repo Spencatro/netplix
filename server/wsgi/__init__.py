@@ -50,6 +50,8 @@ class NetplixApp(Flask):
         self.route("/seek/<resource_id>/<percent>/")(self.seek)
         self.route("/secret_debug/<command>/")(self.debug)
         self.route("/status/<resource_id>/")(self.status)
+        self.route("/pause_renderer/")(self.pause_renderer)
+        self.route("/play_renderer/")(self.play_renderer)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
@@ -213,6 +215,14 @@ class NetplixApp(Flask):
             self.vlc_instance.vlm_del_media(str(resource_id))
         return "Success: "+result
 
+    def pause_renderer(self):
+        db_dict = self.load_db_file()
+        db_dict['current_command'] = "pause"
+
+    def play_renderer(self):
+        db_dict = self.load_db_file()
+        db_dict['current_command'] = "play"
+
     def play(self, resource_id):
         result = self.stop_all()
         time.sleep(.1)
@@ -254,6 +264,7 @@ class NetplixApp(Flask):
         playing_list = self.get_playing_list()
         if len(playing_list) == 0:
             db_dict['now_playing'] = None
+            db_dict['current_command'] = "pause"
             with open(config.DB_JSON_FILE,'w') as fp:
                 json.dump(db_dict, fp)
             return "Stream stopped"
@@ -265,7 +276,7 @@ class NetplixApp(Flask):
         return "no update"
 
     def show_vlm(self, resource_id):
-        res = vlc_instance.vlm_show_media(str(resource_id))
+        res = self.vlc_instance.vlm_show_media(str(resource_id))
         return str(dir(res))
 
 app = NetplixApp(__name__)
