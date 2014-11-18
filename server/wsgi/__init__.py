@@ -36,7 +36,6 @@ class NetplixApp(Flask):
         self.route("/index/")(self.index)
         self.route('/threadtest/')(self.threadtest)
         self.route('/upbloat/', methods=['GET', 'POST'])(self.upload)
-        self.route("/clear_db_are_you_sure_yes_i_am/")(self.clear_db)
         self.route("/envinfo/")(self.envinfo)
         self.route("/dbdump/")(self.dbdump)
         self.route("/search/by_title/<title>/")(self.search_by_title)
@@ -49,8 +48,8 @@ class NetplixApp(Flask):
         self.route("/cron_trigger/")(self.cron_proc)
         self.route("/catalog/")(self.catalog)
         self.route("/seek/<resource_id>/<percent>/")(self.seek)
-        self.route("/secret_debug/<command>")(self.debug)
-        self.route("/status/<resource_id>")(self.status)
+        self.route("/secret_debug/<command>/")(self.debug)
+        self.route("/status/<resource_id>/")(self.status)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
