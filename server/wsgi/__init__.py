@@ -21,7 +21,6 @@ if not os.path.exists(config.DB_JSON_FILE):
         empty_db = {"SCHEMA_VERSION":1.0}
         json.dump(empty_db, fp)
 
-vlc_instance = vlc.Instance()
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -32,6 +31,7 @@ class NetplixApp(Flask):
     def __init__(self, arg):
         #
         super(NetplixApp, self).__init__(arg)
+        self.vlc_instance = vlc.Instance()
         self.route("/")(self.index)
         self.route("/index/")(self.index)
         self.route('/threadtest/')(self.threadtest)
@@ -48,6 +48,8 @@ class NetplixApp(Flask):
         self.route("/stop_all/")(self.stop_all)
         self.route("/cron_trigger/")(self.cron_proc)
         self.route("/catalog/")(self.catalog)
+        self.route("/seek/<resource_id>/<percent>/")(self.seek)
+        self.route("/secret_debug/<command>")(self.debug)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
@@ -59,7 +61,7 @@ class NetplixApp(Flask):
         db_dict = self.load_db_file()
         max_id = int(db_dict['id_pointer'])
         for potential_id in range(max_id):
-            res = vlc_instance.vlm_show_media(str(potential_id))
+            res = self.vlc_instance.vlm_show_media(str(potential_id))
             if hasattr(res, 'title'):
                 playing_list.append(potential_id)
         return playing_list
@@ -79,12 +81,17 @@ class NetplixApp(Flask):
                "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: upload page</p>" \
                ""
 
+    def debug(self, command):
+        return str(eval(command))
+
     def catalog(self):
         return jsonify({'catalog':self.load_db_file()['catalog']})
 
     def threadtest(self):
         pass
 
+    def seek(self, resource_id, percent):
+        self.vlc_instance
 
     def upload(self):
         if request.method == 'POST':
@@ -141,8 +148,8 @@ class NetplixApp(Flask):
         catalog = db_dict['catalog']
         for catalog_object in catalog:
             if title.lower() in catalog_object['title'].lower():
-                    if catalog_object not in results_arr:
-                        results_arr.append(catalog_object)
+                if catalog_object not in results_arr:
+                    results_arr.append(catalog_object)
         return jsonify({'results':results_arr})
 
 
@@ -177,8 +184,8 @@ class NetplixApp(Flask):
         result = ""
         for resource_id in self.get_playing_list():
             result += str(resource_id)+" "
-            vlc_instance.vlm_stop_media(str(resource_id))
-            vlc_instance.vlm_del_media(str(resource_id))
+            self.vlc_instance.vlm_stop_media(str(resource_id))
+            self.vlc_instance.vlm_del_media(str(resource_id))
         return "Success: "+result
 
     def play(self, resource_id):
@@ -202,8 +209,8 @@ class NetplixApp(Flask):
         sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
 
         def threading_target():
-            vlc_instance.vlm_add_broadcast(str(resource_id), filepath, sout, 0, None, True, False)
-            vlc_instance.vlm_play_media(str(resource_id))
+            self.vlc_instance.vlm_add_broadcast(str(resource_id), filepath, sout, 0, None, True, False)
+            self.vlc_instance.vlm_play_media(str(resource_id))
             time.sleep(100)
 
         thread = threading.Thread(target=threading_target)
