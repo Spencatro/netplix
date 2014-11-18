@@ -227,11 +227,11 @@ class NetplixApp(Flask):
         db_dict['current_command'] = "play"
         with open(config.DB_JSON_FILE,'w') as fp:
             json.dump(db_dict, fp)
+        return "Success"
 
     def play(self, resource_id):
         result = self.stop_all()
         time.sleep(.1)
-        self.play_renderer()
         db_dict = self.load_db_file()
         catalog = db_dict['catalog']
         resource = None
@@ -257,6 +257,8 @@ class NetplixApp(Flask):
         thread = threading.Thread(target=threading_target)
         thread.start()
 
+        self.play_renderer()
+
         return jsonify({'title':title,'rtsp':rtsp_uri, "result":result})
 
     def heartbeat(self):
@@ -270,9 +272,6 @@ class NetplixApp(Flask):
         playing_list = self.get_playing_list()
         if len(playing_list) == 0:
             db_dict['now_playing'] = None
-            db_dict['current_command'] = "pause"
-            with open(config.DB_JSON_FILE,'w') as fp:
-                json.dump(db_dict, fp)
             return "Stream stopped"
         for resource_id in self.get_playing_list():
             db_dict['now_playing'] = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
