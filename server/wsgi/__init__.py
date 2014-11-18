@@ -218,14 +218,20 @@ class NetplixApp(Flask):
     def pause_renderer(self):
         db_dict = self.load_db_file()
         db_dict['current_command'] = "pause"
+        with open(config.DB_JSON_FILE,'w') as fp:
+            json.dump(db_dict, fp)
+
 
     def play_renderer(self):
         db_dict = self.load_db_file()
         db_dict['current_command'] = "play"
+        with open(config.DB_JSON_FILE,'w') as fp:
+            json.dump(db_dict, fp)
 
     def play(self, resource_id):
         result = self.stop_all()
         time.sleep(.1)
+        self.play_renderer()
         db_dict = self.load_db_file()
         catalog = db_dict['catalog']
         resource = None
