@@ -188,7 +188,7 @@ class NetplixApp(Flask):
         catalog = db_dict['catalog']
         resource = None
         for catalog_object in catalog:
-            if catalog_object['id'] == resource_id:
+            if str(catalog_object['id']) == str(resource_id):
                 resource = catalog_object
                 break
 
