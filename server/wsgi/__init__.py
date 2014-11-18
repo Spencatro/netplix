@@ -246,7 +246,8 @@ class NetplixApp(Flask):
     def heartbeat(self):
         db = self.load_db_file()
         uri = db['now_playing']
-        return jsonify({'uri':uri})
+        command = db['current_command']
+        return jsonify({'uri':uri, 'command':command})
 
     def cron_proc(self):
         db_dict = self.load_db_file()
