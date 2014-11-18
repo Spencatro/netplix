@@ -139,10 +139,10 @@ class NetplixApp(Flask):
         db_dict = self.load_db_file()
         results_arr = []
         catalog = db_dict['catalog']
-        for object in catalog:
-            if title.lower() in object['title'].lower():
-                    if object not in results_arr:
-                        results_arr.append(object)
+        for catalog_object in catalog:
+            if title.lower() in catalog_object['title'].lower():
+                    if catalog_object not in results_arr:
+                        results_arr.append(catalog_object)
         return jsonify({'results':results_arr})
 
 
@@ -150,26 +150,26 @@ class NetplixApp(Flask):
         db_dict = self.load_db_file()
         results_arr = []
         catalog = db_dict['catalog']
-        for object in catalog:
-            for actor_string in object['actors']:
+        for catalog_object in catalog:
+            for actor_string in catalog_object['actors']:
                 if actor.lower() in actor_string.lower():
-                    if object not in results_arr:
-                        results_arr.append(object)
+                    if catalog_object not in results_arr:
+                        results_arr.append(catalog_object)
         return jsonify({'results':results_arr})
 
     def search(self, search_string):
         db_dict = self.load_db_file()
         results_arr = []
         catalog = db_dict['catalog']
-        for object in catalog:
-            if search_string.lower() in object['title'].lower():
-                if object not in results_arr:
-                    results_arr.append(object)
+        for catalog_object in catalog:
+            if search_string.lower() in catalog_object['title'].lower():
+                if catalog_object not in results_arr:
+                    results_arr.append(catalog_object)
                     continue
-            for actor in object['actors']:
+            for actor in catalog_object['actors']:
                 if search_string.lower() in actor.lower():
-                    if object not in results_arr:
-                        results_arr.append(object)
+                    if catalog_object not in results_arr:
+                        results_arr.append(catalog_object)
                         continue
         return jsonify({'results':results_arr})
 
@@ -186,11 +186,17 @@ class NetplixApp(Flask):
         time.sleep(.1)
         db_dict = self.load_db_file()
         catalog = db_dict['catalog']
-        if object not in catalog:
-            resource_id = object['id']
+        resource = None
+        for catalog_object in catalog:
+            if catalog_object['id'] == resource_id:
+                resource = catalog_object
+                break
+
+        if resource is None:
+            # TODO: 404 here
             return "ERROR: Video with ID "+str(resource_id)+" does not exist!", 404
-        title = db_dict['catalog'][resource_id]['title']
-        filepath = db_dict['catalog'][resource_id]['filepath']
+        title = resource['title']
+        filepath = resource['filepath']
 
         rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
         sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
@@ -202,8 +208,8 @@ class NetplixApp(Flask):
 
         thread = threading.Thread(target=threading_target)
         thread.start()
-        
-        return jsonify({'rtsp':rtsp_uri, "result":result})
+
+        return jsonify({'title':title,'rtsp':rtsp_uri, "result":result})
 
     def heartbeat(self):
         db = self.load_db_file()
