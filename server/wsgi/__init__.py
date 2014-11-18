@@ -102,7 +102,7 @@ class NetplixApp(Flask):
         try:
             status = json.loads(self.vlc_instance.vlm_show_media("4"))['instances']['instance']
         except:
-            return {'state':'not playing'}
+            return jsonify({'state':'not playing'})
         return_dict = {}
         return_dict['position'] = status['position']
         return_dict['state'] = status['state']
