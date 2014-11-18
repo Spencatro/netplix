@@ -50,7 +50,7 @@ class NetplixApp(Flask):
         self.route("/catalog/")(self.catalog)
         self.route("/seek/<resource_id>/<percent>/")(self.seek)
         self.route("/secret_debug/<command>")(self.debug)
-        self.route("/status/<resource_id>")(self.debug)
+        self.route("/status/<resource_id>")(self.status)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
