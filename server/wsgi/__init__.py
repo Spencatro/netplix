@@ -91,7 +91,14 @@ class NetplixApp(Flask):
         pass
 
     def seek(self, resource_id, percent):
-        self.vlc_instance
+        try:
+            self.vlc_instance.vlm_seek_media(resource_id,percent)
+        except:
+            return jsonify({'status':'error'}), 500
+        return jsonify({'status':'success'})
+
+    def status(self, resource_id):
+        return jsonify(self.vlc_instance.vlm_show_media(resource_id))
 
     def upload(self):
         if request.method == 'POST':
