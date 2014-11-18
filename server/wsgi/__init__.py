@@ -93,6 +93,17 @@ class NetplixApp(Flask):
 
     def seek(self, resource_id, percent):
         try:
+            status = json.loads(self.vlc_instance.vlm_show_media("4"))['instances']['instance']
+        except:
+            return jsonify({'status':'error'}), 500
+        current_percent = float(status['position'])
+        if current_percent > percent:
+            # mad haxx
+            self.stop_all()
+            time.sleep(.5)
+            self.play(resource_id)
+            time.sleep(.5)
+        try:
             self.vlc_instance.vlm_seek_media(resource_id,float(percent))
         except:
             return jsonify({'status':'error'}), 500
@@ -100,7 +111,7 @@ class NetplixApp(Flask):
 
     def status(self, resource_id):
         try:
-            status = json.loads(self.vlc_instance.vlm_show_media("4"))['instances']['instance']
+            status = json.loads(self.vlc_instance.vlm_show_media(resource_id))['instances']['instance']
         except:
             return jsonify({'state':'not playing'})
         return_dict = {}
