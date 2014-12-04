@@ -66,7 +66,8 @@ public class MainActivity extends Activity {
             Intent i = new Intent(getApplicationContext(), NowPlaying.class);
             i.putExtra("movieID",(int)id);
             i.putExtra("movieTitle", titleView.getText());
-            //i.putExtra("moviePreviewUrl", mediaList.get(position));
+            i.putExtra("moviePreviewUrl", mediaList.get(position).getPreviewUrl());
+            i.putExtra("movieLength", mediaList.get(position).getLength());
             startActivity(i);
         }
     };
@@ -140,6 +141,7 @@ public class MainActivity extends Activity {
                     media.setId(Integer.parseInt(jsObject.getString("id")));
                     media.setFilePath(jsObject.getString("filepath"));
                     media.setPreviewUrl(jsObject.getString("preview_url"));
+                    media.setsLength(jsObject.getString("length"));
 
                     JSONArray actorsArry = jsObject.getJSONArray("actors");
                     ArrayList<String> actors = new ArrayList<String>();
