@@ -111,7 +111,13 @@ class NetplixApp(Flask):
         try:
             self.vlc_instance.vlm_seek_media(resource_id,float(percent))
         except:
-            return jsonify({'status':'error'}), 500
+            try:
+                self.vlc_instance.vlm_seek_media(resource_id,float(percent))
+            except:
+                try:
+                    self.vlc_instance.vlm_seek_media(resource_id,float(percent))
+                except:
+                    return jsonify({'status':'error'}), 500
         return jsonify({'status':'success'})
 
     def status(self, resource_id):
