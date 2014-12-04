@@ -29,29 +29,27 @@ def allowed_file(filename):
 class NetplixApp(Flask):
 
     def __init__(self, arg):
-        #
         super(NetplixApp, self).__init__(arg)
         self.vlc_instance = vlc.Instance()
         self.route("/")(self.index)
         self.route("/index/")(self.index)
-        self.route('/threadtest/')(self.threadtest)
-        self.route('/upbloat/', methods=['GET', 'POST'])(self.upload)
-        self.route("/envinfo/")(self.envinfo)
         self.route("/dbdump/")(self.dbdump)
+        self.route("/envinfo/")(self.envinfo)
         self.route("/search/by_title/<title>/")(self.search_by_title)
         self.route("/search/by_actor/<actor>/")(self.search_by_actor)
         self.route("/search/<search_string>/")(self.search)
         self.route("/play/<resource_id>/")(self.play)
-        self.route("/heartbeat/")(self.heartbeat)
-        self.route("/show/<resource_id>/")(self.show_vlm)
         self.route("/stop_all/")(self.stop_all)
-        self.route("/cron_trigger/")(self.cron_proc)
         self.route("/catalog/")(self.catalog)
         self.route("/seek/<resource_id>/<percent>/")(self.seek)
-        self.route("/secret_debug/<command>/")(self.debug)
         self.route("/status/<resource_id>/")(self.status)
         self.route("/pause_renderer/")(self.pause_renderer)
         self.route("/play_renderer/")(self.play_renderer)
+        # "Private" unlisted API
+        self.route("/heartbeat/")(self.heartbeat)
+        self.route("/cron_trigger/")(self.cron_proc)
+        self.route('/upbloat/', methods=['GET', 'POST'])(self.upload)
+        self.route("/secret_debug/<command>/")(self.debug)
 
     def load_db_file(self):
         with open(config.DB_JSON_FILE) as fp:
@@ -88,9 +86,6 @@ class NetplixApp(Flask):
 
     def catalog(self):
         return jsonify({'catalog':self.load_db_file()['catalog']})
-
-    def threadtest(self):
-        pass
 
     def seek(self, resource_id, percent):
         try:
@@ -220,6 +215,7 @@ class NetplixApp(Flask):
         db_dict['current_command'] = "pause"
         with open(config.DB_JSON_FILE,'w') as fp:
             json.dump(db_dict, fp)
+        return "Success"
 
 
     def play_renderer(self):
@@ -281,10 +277,6 @@ class NetplixApp(Flask):
                 json.dump(db_dict, fp)
             return "Stream running: "+str(resource_id)
         return "no update"
-
-    def show_vlm(self, resource_id):
-        res = self.vlc_instance.vlm_show_media(str(resource_id))
-        return str(dir(res))
 
 app = NetplixApp(__name__)
 app.config['UPLOAD_FOLDER'] = config.DATA_DIR

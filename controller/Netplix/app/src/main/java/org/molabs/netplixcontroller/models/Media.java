@@ -10,6 +10,7 @@ public class Media {
     private ArrayList<String> actors = new ArrayList<String>();
     private String filePath;
     private String title;
+    private String previewUrl;
 
     public Media() {
 
@@ -32,6 +33,9 @@ public class Media {
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public String getPreviewUrl() { return title; }
+    public void setPreviewUrl(String previewUrl) { this.previewUrl = previewUrl; }
 
     public String toString() { return title; }
 }

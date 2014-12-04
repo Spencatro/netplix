@@ -139,6 +139,7 @@ public class MainActivity extends Activity {
                     media.setTitle(jsObject.getString("title"));
                     media.setId(Integer.parseInt(jsObject.getString("id")));
                     media.setFilePath(jsObject.getString("filepath"));
+                    media.setPreviewUrl(jsObject.getString("preview_url"));
 
                     JSONArray actorsArry = jsObject.getJSONArray("actors");
                     ArrayList<String> actors = new ArrayList<String>();
