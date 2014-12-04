@@ -252,7 +252,7 @@ class NetplixApp(Flask):
         filepath = resource['filepath']
 
         rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
-        sout = '#rtsp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
+        sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
 
         def threading_target():
             self.vlc_instance.vlm_add_broadcast(str(resource_id), filepath, sout, 0, None, True, False)
