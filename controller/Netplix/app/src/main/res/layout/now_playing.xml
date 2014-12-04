@@ -5,6 +5,11 @@
     android:background="#ff2d2d2d"
     android:weightSum="1">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/nowPlayingID"/>
+
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -59,7 +64,8 @@
                 android:layout_weight="1"
                 android:src="@drawable/play"
                 android:background="@null"
-                android:id="@+id/playPauseButton"/>
+                android:id="@+id/playPauseButton"
+                android:onClick="playPauseMovie"/>
 
             <ImageButton
                 android:id="@+id/stopButton"
@@ -68,6 +74,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:src="@drawable/stop"
+                android:onClick="stopMovie"
                 android:background="@null"/>
 
             <FrameLayout

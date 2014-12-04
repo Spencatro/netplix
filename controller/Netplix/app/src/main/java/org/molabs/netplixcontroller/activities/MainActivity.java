@@ -3,6 +3,7 @@ package org.molabs.netplixcontroller.activities;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -56,9 +57,17 @@ public class MainActivity extends Activity {
             TextView tView = (TextView) findViewById(R.id.movieTitle);
             tView.setText(mediaList.get(position).toString());
 
-            ll.setVisibility(View.VISIBLE);
+            TextView titleView = (TextView) v.findViewById(R.id.title);
 
-            selectedMedia = (int)id;
+            //ll.setVisibility(View.VISIBLE);
+
+            //selectedMedia = (int)id;
+
+            Intent i = new Intent(getApplicationContext(), NowPlaying.class);
+            i.putExtra("movieID",(int)id);
+            i.putExtra("movieTitle", titleView.getText());
+            //i.putExtra("moviePreviewUrl", mediaList.get(position));
+            startActivity(i);
         }
     };
     @Override
@@ -80,7 +89,7 @@ public class MainActivity extends Activity {
                 url = UrlBuilder.search(query);
                 break;
             case play:
-                url = UrlBuilder.play(selectedMedia);
+                url = UrlBuilder.playStream(selectedMedia);
                 break;
         }
 
@@ -165,91 +174,6 @@ public class MainActivity extends Activity {
         JsonObjectRequest(view, RequestTypes.play);
     }
 
-    /*public void search(View view, final RequestTypes requestType) {
-        String query = ((EditText)findViewById(R.id.searchText)).getText().toString();
-        url = UrlBuilder.search(query);
-
-        pDialog = new ProgressDialog(this);
-        // Showing progress dialog before making http request
-        pDialog.setMessage("Loading...");
-        pDialog.show();
-
-        // changing action bar color
-        getActionBar().setBackgroundDrawable(
-                new ColorDrawable(Color.parseColor("#1b1b1b")));
-
-        // Creating volley request obj
-
-        JsonObjectRequest mediaRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-
-            @Override
-            public void onResponse(JSONObject response) {
-                Log.d(TAG, response.toString());
-                hidePDialog();
-                Media media;
-                resetData();
-
-                try {
-                    JSONArray jsonArray = response.getJSONArray("results");
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        try {
-                            JSONObject jsObject = jsonArray.getJSONObject(i);
-                            media = new Media();
-                            media.setTitle(jsObject.getString("title"));
-                            media.setId(Integer.parseInt(jsObject.getString("id")));
-                            media.setFilePath(jsObject.getString("filepath"));
-
-                            JSONArray actorsArry = jsObject.getJSONArray("actors");
-                            ArrayList<String> actors = new ArrayList<String>();
-                            for (int j = 0; j < actorsArry.length(); j++) {
-                                actors.add((String) actorsArry.get(j));
-                            }
-                            media.setActors(actors);
-
-                            mediaList.add(media);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                // notifying list adapter about data changes
-                // so that it renders the list view with updated data
-                adapter.notifyDataSetChanged();
-            }
-        }, new Response.ErrorListener() {
-
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                VolleyLog.d(TAG, "Error: " + error.getMessage());
-                hidePDialog();
-            }
-        });
-
-        // Adding request to request queue
-        AppController.getInstance().addToRequestQueue(mediaRequest);
-    }
-
-    private void play(View view) {
-        url = UrlBuilder.play(selectedMedia);
-
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                // Display the first 500 characters of the response string.
-                //mTextView.setText("Response is: "+ response.substring(0,500));
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                //mTextView.setText("That didn't work!");
-            }
-        });
-        // Add the request to the RequestQueue.
-        AppController.getInstance().addToRequestQueue(stringRequest);
-    }*/
 
     private void hidePDialog() {
         if (pDialog != null) {
