@@ -19,6 +19,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="org.molabs.netplixcontroller.activities.NowPlaying"
+            android:label="@string/title_activity_now_playing" >
+        </activity>
     </application>
 
 </manifest>

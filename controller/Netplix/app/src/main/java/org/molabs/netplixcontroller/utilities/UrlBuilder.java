@@ -33,7 +33,13 @@ public class UrlBuilder {
         return url + "envinfo";
     }
 
-    public static String play(Integer id) {
+    public static String playStream(Integer id) {
         return url + "play/" + id;
     }
+
+    public static String playRenderer() { return url + "play_renderer"; }
+
+    public static String pauseRenderer() { return url + "pause_renderer"; }
+
+    public static String stopAll() { return url + "stop_all"; }
 }
