@@ -1,4 +1,9 @@
 #! /usr/bin/python
+"""
+This program is adapted from a simple libVLC / GTK  widget.
+
+This file loads a streaming resource and plays or pauses, according to commands it pulls from a server "heartbeat."
+"""
 
 #
 # gtk example/widget for VLC Python bindings
@@ -19,19 +24,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
 #
 
-"""VLC Gtk Widget classes + example application.
-
-This module provides two helper classes, to ease the embedding of a
-VLC component inside a pygtk application.
-
-VLCWidget is a simple VLC widget.
-
-DecoratedVLCWidget provides simple player controls.
-
-When called as an application, it behaves as a video player.
-
-$Id$
-"""
 import json
 import sys
 import os.path as path
@@ -53,7 +45,7 @@ import vlc
 
 from gettext import gettext as _
 
-# Create a single vlc.Instance() to be shared by (possible) multiple players.
+# Create a single vlc.Instance()
 instance = vlc.Instance()
 
 class VLCWidget(gtk.DrawingArea):
@@ -95,20 +87,11 @@ class DecoratedVLCWidget(gtk.VBox):
         """
         tb = gtk.Toolbar()
         tb.set_style(gtk.TOOLBAR_ICONS)
-        for text, tooltip, stock, callback in (
-            (_("Play"), _("Play"), gtk.STOCK_MEDIA_PLAY, lambda b: self.player.play()),
-            (_("Pause"), _("Pause"), gtk.STOCK_MEDIA_PAUSE, lambda b: self.player.pause()),
-            (_("Stop"), _("Stop"), gtk.STOCK_MEDIA_STOP, lambda b: self.player.stop()),
-            ):
-            b=gtk.ToolButton(stock)
-            b.set_tooltip_text(tooltip)
-            b.connect("clicked", callback)
-            tb.insert(b, -1)
         tb.show_all()
         return tb
 
 class VideoPlayer:
-    """Example simple video player.
+    """Simple video player.
     """
     def __init__(self):
         self.vlc = DecoratedVLCWidget()
@@ -117,6 +100,9 @@ class VideoPlayer:
         self.vlc.player.set_media(instance.media_new(new_media))
 
     def make_request(self, pass_number = 1):
+        """
+        Helps keep requests simple; will retry 3 times on failure before returning None, which will cause an exception from the caller
+        """
         result = None
         http_result = requests.get(config.SERVER_URL+"/heartbeat/")
         try:
@@ -132,29 +118,40 @@ class VideoPlayer:
         return result['uri']
 
     def heartbeat(self):
+        """
+        Continuously poll the server on 1 second intervals to see if there are any new commands to handle
+        """
         while(1):
             time.sleep(1)
             uri = self.make_request()
             if uri != self.uri:
-                print uri
+                # Only check for commands if the URI has changed (this signals a new command has been issued)
                 self.uri = uri
                 if uri:
+                    # A play command always contains a valid URI, so update the media and play
                     self.update_media(self.uri)
                     self.vlc.player.play()
                 else:
+                    # A pause command will contain a null URI, so stop the player
                     self.vlc.player.stop()
 
     def main(self):
+        # Create a thread for the heartbeat
         self.heartbeat_thread = threading.Thread(target=self.heartbeat)
         self.heartbeat_thread.start()
+
+        # Allocate a variable for the uri
         self.uri = ""
+
+        # Create GTK resources
         w = gtk.Window()
         w.add(self.vlc)
         w.show_all()
         w.connect("destroy", gtk.main_quit)
+
+        #Run the program
         gtk.main()
 
 if __name__ == '__main__':
-    # Only 1 file. Simple interface
     p=VideoPlayer()
     p.main()
