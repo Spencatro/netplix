@@ -41,5 +41,13 @@ public class UrlBuilder {
 
     public static String pauseRenderer() { return url + "pause_renderer"; }
 
+    public static String seek(int id, double percent) {
+        String returnUrl = "";
+        if(percent >= 0 && percent <= 1) {
+            returnUrl = url + "seek/" + id + "/" + percent;
+        }
+        return returnUrl;
+    }
+
     public static String stopAll() { return url + "stop_all"; }
 }

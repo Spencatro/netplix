@@ -11,6 +11,7 @@ public class Media {
     private String filePath;
     private String title;
     private String previewUrl;
+    private String length;
 
     public Media() {
 
@@ -34,8 +35,11 @@ public class Media {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    public String getPreviewUrl() { return title; }
+    public String getPreviewUrl() { return previewUrl; }
     public void setPreviewUrl(String previewUrl) { this.previewUrl = previewUrl; }
+
+    public String getLength() {return length; }
+    public void setsLength(String length) { this.length = length; }
 
     public String toString() { return title; }
 }

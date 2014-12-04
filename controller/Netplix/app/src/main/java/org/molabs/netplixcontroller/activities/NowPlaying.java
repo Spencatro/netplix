@@ -6,6 +6,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import org.molabs.netplixcontroller.R;
@@ -16,6 +18,7 @@ public class NowPlaying extends Activity {
     private int movieID = -1;
     private String movieTitle;
     private String moviePreviewUrl;
+    private String movieLength;
     private boolean isPlaying = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,19 +29,56 @@ public class NowPlaying extends Activity {
         if (extras != null) {
             movieID = extras.getInt("movieID");
             movieTitle = extras.getString("movieTitle");
+            moviePreviewUrl = extras.getString("moviePreviewUrl");
+            movieLength = extras.getString("movieLength");
 
 
             TextView titleView = (TextView) findViewById(R.id.titleTextView);
             titleView.setText(movieTitle);
+
+            TextView timeView = (TextView) findViewById(R.id.totalTime);
+            timeView.setText(movieLength);
         }
 
         TextView tView = (TextView) findViewById(R.id.nowPlayingID);
-        tView.setText("hello" + movieID);
+        ImageView previewImageView = (ImageView) findViewById((R.id.moviePreviewImage));
+        //tView.setText("hello" + movieID);
+
+        if(moviePreviewUrl != null) {
+            try {
+                NetworkHelper.getImage(moviePreviewUrl, (ImageView) findViewById(R.id.moviePreviewImage));
+                //previewImageView.setImageBitmap(bmp);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         if(movieID >= 0) {
             String url = UrlBuilder.playStream(movieID);
             NetworkHelper.request(url);
         }
+
+        SeekBar movieSlider = (SeekBar) findViewById(R.id.seekBar);
+
+        movieSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progressChanged = 0;
+
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+                progressChanged = progress;
+                String url = UrlBuilder.seek(movieID, (double) progress/100.0);
+                NetworkHelper.request(url);
+                //System.out.println("Seekbar " + progressChanged);
+            }
+
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                //Toast.makeText(SeekbarActivity.this, "seek bar progress:" + progressChanged,
+                        //Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
 
@@ -92,6 +132,7 @@ public class NowPlaying extends Activity {
 
         NetworkHelper.request(url);
 
+        finish();
         //quit this activity, go back to loop.
     }
 }

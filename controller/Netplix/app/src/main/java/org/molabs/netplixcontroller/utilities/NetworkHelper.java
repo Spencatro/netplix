@@ -3,11 +3,16 @@
  */
 package org.molabs.netplixcontroller.utilities;
 
+import android.graphics.Bitmap;
+import android.widget.ImageView;
+
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.StringRequest;
 
+import org.molabs.netplixcontroller.R;
 import org.molabs.netplixcontroller.app.AppController;
 
 public class NetworkHelper {
@@ -29,5 +34,21 @@ public class NetworkHelper {
             }
         });
         AppController.getInstance().addToRequestQueue(stringRequest);
+    }
+
+    public static void getImage(String url, final ImageView mImageView) {
+        ImageRequest request = new ImageRequest(url, new Response.Listener<Bitmap>() {
+            @Override
+            public void onResponse(Bitmap bitmap) {
+                mImageView.setImageBitmap(bitmap);
+            }
+        }, 0, 0, null,
+        new Response.ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                mImageView.setImageResource(R.drawable.movie);
+            }
+        });
+
+        AppController.getInstance().addToRequestQueue(request);
     }
 }
