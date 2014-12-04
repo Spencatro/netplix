@@ -71,13 +71,14 @@ class NetplixApp(Flask):
         return "<h1>Netplix server</h1>" \
                "<p>The following is a short API for the Netplix server</p>" \
                "<p>All pages return a json file. Most languages can trivially parse json.</p>" \
+               "<b>http://root-url/catalog</b>: shows a list of all resources in the database<br>" \
+               "<b>http://root-url/pause_renderer/</b>: pauses the renderer playback<br>" \
+               "<b>http://root-url/play_renderer/</b>: resumes playing after renderer is paused<br>" \
+               "<b>http://root-url/play/[Integer ID]</b>: begins playing title by ID--not title!<br>" \
                "<p><b>http://root-url/search/[some string]</b>: searches both titles and actor lists<br>" \
                "<b>http://root-url/search/by_actor/[some string]</b>: searches by actor list only<br>" \
                "<b>http://root-url/search/by_title/[some string]</b>: searches by title only<br>" \
-               "<b>http://root-url/dbdump</b>: shows a dump of the current database<br>" \
-               "<b>http://root-url/envinfo</b>: lists all environment variables<br>" \
-               "<b>http://root-url/play/[Integer ID]</b>: NOT IMPLEMENTED: begins playing title by ID--not title!<br>" \
-               "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: Deletes all entries in the database<br>" \
+               "<b>http://root-url/stop_all/</b>: Stops all playing rtsp streams<br>" \
                "<b>http://root-url/[URL HIDDEN, ADMIN ONLY!]</b>: upload page</p>" \
                ""
 
@@ -91,7 +92,15 @@ class NetplixApp(Flask):
         try:
             status = json.loads(self.vlc_instance.vlm_show_media("4"))['instances']['instance']
         except:
-            return jsonify({'status':'error'}), 500
+            time.sleep(.1)
+            try:
+                status = json.loads(self.vlc_instance.vlm_show_media("4"))['instances']['instance']
+            except:
+                time.sleep(.1)
+                try:
+                    status = json.loads(self.vlc_instance.vlm_show_media("4"))['instances']['instance']
+                except:
+                    return jsonify({'status':'error'}), 500
         current_percent = float(status['position'])
         if current_percent > float(percent):
             # mad haxx
@@ -243,7 +252,7 @@ class NetplixApp(Flask):
         filepath = resource['filepath']
 
         rtsp_uri = 'rtsp://'+str(config.SERVER_IP)+':'+str(config.RENDERER_STREAM_PORT)+'/'+str(resource_id)+'.sdp'
-        sout = '#rtp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
+        sout = '#rtsp{dst='+config.SERVER_IP+',port='+str(config.SERVER_STREAM_PORT)+',sdp='+rtsp_uri+'}'
 
         def threading_target():
             self.vlc_instance.vlm_add_broadcast(str(resource_id), filepath, sout, 0, None, True, False)
